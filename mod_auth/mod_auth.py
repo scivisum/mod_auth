@@ -247,7 +247,7 @@ import base64
 from .exception import *
 
 ###IMPORT FOR MOD_AUTHPUBTKT###
-from M2Crypto import RSA, DSA
+import Crypto.PublicKey.RSA as RSA
 
 ## DEFAULT CONFIGURATION
 DEFAULT_TIMEOUT= 12*60*60
@@ -261,27 +261,21 @@ class SignedTicket(object):
     """
     Mod_auth_pubtkt style cookie authentication class.
     """
-    def __init__(self,pub_key_Path, priv_key_Path=None ):
+    def __init__(self, pub_key_Path, priv_key_Path=None ):
         ##LOAD priv_key
         try:
             if priv_key_Path is not None:
-                try:
-                    priv_key = RSA.load_key(priv_key_Path)
-                except Exception as e:
-                    priv_key = DSA.load_key(priv_key_Path)
+                priv_key = RSA.importKey(open(priv_key_Path).read())
             else :
                 priv_key = None
 
-            if priv_key_Path is not None and isinstance(priv_key, RSA.RSA):
-                pub_key = RSA.load_pub_key(pub_key_Path)
-            else:
-                pub_key = DSA.load_pub_key(pub_key_Path)
+            pub_key = RSA.importKey(open(pub_key_Path).read())
 
         except Exception as e:
             raise ValueError('Unknown key type: %s' % self.pub_key)
 
         self.priv_key = priv_key
-        self.pub_key =  pub_key
+        self.pub_key = pub_key
 
 
     def __verify_sig(self, data, sig):
@@ -300,16 +294,9 @@ class SignedTicket(object):
         """
         sig = base64.b64decode(sig)
         dgst = hashlib.sha1(data).digest()
-        if isinstance(self.pub_key, RSA.RSA_pub):
-            try:
-                self.pub_key.verify(dgst, sig, 'sha1')
-            except RSA.RSAError:
-                return False
-            return True
-        elif isinstance(self.pub_key, DSA.DSA_pub):
-            return not not self.pub_key.verify_asn1(dgst, sig)
-        else:
-            raise ValueError('Unknown key type: %s' % self.pub_key)
+
+        return self.pub_key.verify(dgst, sig)
+
 
     def __calculate_sig(self,data):
         """Calculates and returns ticket's signature.
@@ -321,14 +308,8 @@ class SignedTicket(object):
 
         """
         dgst = hashlib.sha1(data).digest()
-        if isinstance(self.priv_key, RSA.RSA):
-            sig = self.priv_key.sign(dgst, 'sha1')
-            sig = base64.b64encode(sig)
-        elif isinstance(self.priv_key, DSA.DSA):
-            sig = self.priv_key.sign_asn1(dgst)
-            sig = base64.b64encode(sig)
-        else:
-            raise ValueError('Unknonw key type: %s' % self.priv_key)
+        sig = self.priv_key.sign(dgst)
+        sig = base64.b64encode(sig)
 
         return sig
 
