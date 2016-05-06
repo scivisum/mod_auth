@@ -244,7 +244,7 @@ from struct import pack
 import hashlib
 import time
 import base64
-from exception import *
+from .exception import *
 
 ###IMPORT FOR MOD_AUTHPUBTKT###
 from M2Crypto import RSA, DSA
@@ -267,7 +267,7 @@ class SignedTicket(object):
             if priv_key_Path is not None:
                 try:
                     priv_key = RSA.load_key(priv_key_Path)
-                except Exception, e:
+                except Exception as e:
                     priv_key = DSA.load_key(priv_key_Path)
             else :
                 priv_key = None
@@ -277,7 +277,7 @@ class SignedTicket(object):
             else:
                 pub_key = DSA.load_pub_key(pub_key_Path)
 
-        except Exception, e:
+        except Exception as e:
             raise ValueError('Unknown key type: %s' % self.pub_key)
 
         self.priv_key = priv_key
@@ -490,7 +490,7 @@ class SignedTicket(object):
                 return userid,token_list,user_data,validuntil
             else:
                 raise TicketExpired(ticket)
-        except Exception, e:
+        except Exception as e:
             raise TicketParseError(ticket,'Validate error')
 
 
@@ -693,7 +693,7 @@ class Ticket(object):
                 if validuntil > now:
                     return data[1:]
 
-        except Exception, e:
+        except Exception as e:
             raise BadTicket(ticket,'ticket is not valid.')
 
         raise TicketExpired(ticket)

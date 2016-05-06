@@ -40,8 +40,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'mod_auth'
-copyright = u'2012, Alfredo Saglimbeni'
+project = 'mod_auth'
+copyright = '2012, Alfredo Saglimbeni'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -183,8 +183,8 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'mod_auth.tex', u'mod\\_auth Documentation',
-   u'Alfredo Saglimbeni', 'manual'),
+  ('index', 'mod_auth.tex', 'mod\\_auth Documentation',
+   'Alfredo Saglimbeni', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -213,8 +213,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'mod_auth', u'mod_auth Documentation',
-     [u'Alfredo Saglimbeni'], 1)
+    ('index', 'mod_auth', 'mod_auth Documentation',
+     ['Alfredo Saglimbeni'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -227,8 +227,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'mod_auth', u'mod_auth Documentation',
-   u'Alfredo Saglimbeni', 'mod_auth', 'One line description of project.',
+  ('index', 'mod_auth', 'mod_auth Documentation',
+   'Alfredo Saglimbeni', 'mod_auth', 'One line description of project.',
    'Miscellaneous'),
 ]
 

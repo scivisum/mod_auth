@@ -1,2 +1,2 @@
 __author__ = 'asaglimbeni'
-from mod_auth import *
+from .mod_auth import *
