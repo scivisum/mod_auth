@@ -20,7 +20,7 @@ METADATA = dict(
     url='https://github.com/b3c/mod_auth/zipball/master',
     license = "BSD",
     keywords='mod_auth mod_auth_pubtkt mod_auth_tkt authentication single sign on ticket',
-    install_requires=['M2Crypto','pycrypto'],
+    install_requires=['pycrypto'],
     include_package_data=True,
     classifiers=[
         'Intended Audience :: Developers',
