@@ -604,16 +604,16 @@ class Ticket(object):
         userid = userid.encode(encoding)
 
         ##OLD VERSION WITHOUT DSA SIGN
-        token_list = ','.join(tokens).encode(encoding)
+        token_list = ','.join(tokens)
 
-        user_list = ','.join(user_data).encode(encoding)
+        user_list = ','.join(user_data)
 
         # ip address is part of the format, set it to 0.0.0.0 to be ignored.
         # inet_aton packs the ip address into a 4 bytes in network byte order.
         # pack is used to convert timestamp from an unsigned integer to 4 bytes
         # in network byte order.
         data1 = inet_aton(cip) + pack("!I", validuntil)
-        data2 = '\0'.join((userid, token_list, user_list))
+        data2 = '\0'.join((userid, token_list, user_list)).encode(encoding)
 
         digest = self.__mod_auth_tkt_digest(data1, data2)
 
