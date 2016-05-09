@@ -363,7 +363,7 @@ class SignedTicket(object):
         v += b';sig=%s' % self.__calculate_sig(v)
         return v
 
-    def __parse_ticket(self, ticket):
+    def parseTkt(self, ticket):
         """Parse and verify auth_pubtkt ticket.
 
         Returns dict with ticket's fields.
@@ -457,7 +457,7 @@ class SignedTicket(object):
 
         """
 
-        parsed_ticket = self.__parse_ticket(ticket)
+        parsed_ticket = self.parseTkt(ticket)
         (validuntil , userid, cip, token_list, user_data) = (
             parsed_ticket['validuntil'], parsed_ticket['uid'], parsed_ticket['cip'],
             parsed_ticket['tokens'], parsed_ticket['udata']
