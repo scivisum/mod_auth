@@ -264,16 +264,12 @@ class SignedTicket(object):
     """
     def __init__(self, pub_key_Path, priv_key_Path=None ):
         ##LOAD priv_key
-        try:
-            if priv_key_Path is not None:
-                priv_key = RSA.importKey(open(priv_key_Path).read())
-            else :
-                priv_key = None
+        if priv_key_Path is not None:
+            priv_key = RSA.importKey(open(priv_key_Path).read())
+        else :
+            priv_key = None
 
-            pub_key = RSA.importKey(open(pub_key_Path).read())
-
-        except Exception as e:
-            raise ValueError('Unknown key type: %s' % self.pub_key)
+        pub_key = RSA.importKey(open(pub_key_Path).read())
 
         self.priv_key = priv_key
         self.pub_key = pub_key
