@@ -375,9 +375,6 @@ class SignedTicket(object):
 
         ``ticket``:
             Ticket string value.
-
-        ``ENCODING``:
-            ENCODING of the data into ticket
         """
 
         i = ticket.rfind(b';')
@@ -453,29 +450,25 @@ class SignedTicket(object):
             ``now`` (string):
                 Timestamp of client datetime, if not set , server timestamp is used.
 
-            ``ENCODING``:
-                ENCODING of the data into ticket
-
         Return:
 
             ``fields`` (tupla):
                 ticket's fields format (userid, tocken, userdata, validuntil)
 
         """
-        try:
-            parsed_ticket = self.__parse_ticket(ticket)
-            ( validuntil , userid, cip, token_list, user_data) = parsed_ticket['validuntil'],  parsed_ticket['uid'], parsed_ticket['cip'] ,parsed_ticket['tokens'] ,parsed_ticket['udata']
 
-            if now is None:
-                now = time.time()
-            if int(validuntil) > now:
-                return userid,token_list,user_data,validuntil
-            else:
-                raise TicketExpired(ticket)
-        except Exception as e:
-            raise TicketParseError(ticket,'Validate error')
+        parsed_ticket = self.__parse_ticket(ticket)
+        (validuntil , userid, cip, token_list, user_data) = (
+            parsed_ticket['validuntil'], parsed_ticket['uid'], parsed_ticket['cip'],
+            parsed_ticket['tokens'], parsed_ticket['udata']
+        )
 
-
+        if now is None:
+            now = time.time()
+        if int(validuntil) > now:
+            return userid, token_list, user_data, validuntil
+        else:
+            raise TicketExpired(ticket)
 
     def createTkt(self,userid, tokens=(), user_data=(), cip='0.0.0.0', validuntil=None):
         """
@@ -501,9 +494,6 @@ class SignedTicket(object):
 
             ``validuntil`` (string):
                 timestamp of ticket expiration.
-
-            ``ENCODING`` :
-                ENCODING of the data into ticket
 
         Return:
 
@@ -591,9 +581,6 @@ class Ticket(object):
             ``validuntil`` (string):
                 timestamp of ticket expiration.
 
-            ``ENCODING`` :
-                ENCODING of the data into ticket
-
         Return:
 
             ``ticket`` (string):
@@ -653,9 +640,6 @@ class Ticket(object):
 
             ``now`` (string):
                 Timestamp of client datetime, if not set , server timestamp is used.
-
-            ``ENCODING``:
-                ENCODING of the data into ticket
 
         Return:
 
