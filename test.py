@@ -14,7 +14,7 @@ def mod_auth_pub_tkt_Test():
     print('#### TEST mod_auth_pubtkt with RSA keys pair : START!\n')
 
     print('Please generate Keys:')
-    subprocess.call('openssl genrsa -out RSAprivkey.pem 1024',shell=True)
+    subprocess.call('openssl genrsa -out RSAprivkey.pem 1024', shell=True)
     subprocess.call('openssl rsa -in RSAprivkey.pem -out RSApubkey.pem -pubout',shell=True)
     print('RSA keys generate!')
 

@@ -251,6 +251,7 @@ import Crypto.PublicKey.RSA as RSA
 
 ## DEFAULT CONFIGURATION
 DEFAULT_TIMEOUT= 12*60*60
+ENCODING = "utf-8"
 ########################
 
 ###########################
@@ -315,7 +316,9 @@ class SignedTicket(object):
 
         return sig
 
-    def __create_ticket(self, uid, validuntil, ip=None, tokens=(),udata=(), graceperiod=None, extra_fields = ()):
+    def __create_ticket(
+        self, uid, validuntil, ip=None, tokens=(),udata=(), graceperiod=None, extra_fields = ()
+    ):
         """Returns signed mod_auth_pubtkt ticket.
 
         Mandatory arguments:
@@ -343,25 +346,24 @@ class SignedTicket(object):
         ``extra_fields``:
             List of (field_name, field_value) pairs which contains addtional, non-standard fields.
         """
-        encoding = "utf-8"
-        uid = uid.encode(encoding)
+        uid = uid.encode(ENCODING)
         v = b'uid=%s;validuntil=%d' % (uid, validuntil)
         if ip:
-            v += b';cip=%s' % ip.encode(encoding)
+            v += b';cip=%s' % ip.encode(ENCODING)
         if tokens:
-            v += b';tokens=%s' % ','.join(tokens).encode(encoding)
+            v += b';tokens=%s' % ','.join(tokens).encode(ENCODING)
         if graceperiod:
             ##TODO not used in 1.0 version
             v += b';graceperiod=%d' % graceperiod
         if udata:
-            v += b';udata=%s' % ','.join(udata).encode(encoding)
+            v += b';udata=%s' % ','.join(udata).encode(ENCODING)
         for k,fv in extra_fields:
             ##TODO not userd in 1.0 version
             v += b';%s=%s' % (k,fv)
         v += b';sig=%s' % self.__calculate_sig(v)
         return v
 
-    def __parse_ticket(self, ticket, encoding = 'utf8'):
+    def __parse_ticket(self, ticket):
         """Parse and verify auth_pubtkt ticket.
 
         Returns dict with ticket's fields.
@@ -374,8 +376,8 @@ class SignedTicket(object):
         ``ticket``:
             Ticket string value.
 
-        ``encoding``:
-            encoding of the data into ticket
+        ``ENCODING``:
+            ENCODING of the data into ticket
         """
 
         i = ticket.rfind(b';')
@@ -388,7 +390,7 @@ class SignedTicket(object):
         if not self.__verify_sig( data, sig):
             raise BadSignature(ticket)
 
-        data =  data.decode(encoding)
+        data =  data.decode(ENCODING)
 
         try:
             fields = dict(f.split('=', 1) for f in data.split(';'))
@@ -431,7 +433,7 @@ class SignedTicket(object):
         return fields
 
 
-    def validateTkt(self,ticket, now=None, encoding='utf8'):
+    def validateTkt(self, ticket, now=None):
 
         """Parse and verify auth_pubtkt ticket.
 
@@ -451,8 +453,8 @@ class SignedTicket(object):
             ``now`` (string):
                 Timestamp of client datetime, if not set , server timestamp is used.
 
-            ``encoding``:
-                encoding of the data into ticket
+            ``ENCODING``:
+                ENCODING of the data into ticket
 
         Return:
 
@@ -461,7 +463,7 @@ class SignedTicket(object):
 
         """
         try:
-            parsed_ticket = self.__parse_ticket(ticket,encoding)
+            parsed_ticket = self.__parse_ticket(ticket)
             ( validuntil , userid, cip, token_list, user_data) = parsed_ticket['validuntil'],  parsed_ticket['uid'], parsed_ticket['cip'] ,parsed_ticket['tokens'] ,parsed_ticket['udata']
 
             if now is None:
@@ -475,7 +477,7 @@ class SignedTicket(object):
 
 
 
-    def createTkt(self,userid, tokens=(), user_data=(), cip='0.0.0.0', validuntil=None, encoding='utf8' ):
+    def createTkt(self,userid, tokens=(), user_data=(), cip='0.0.0.0', validuntil=None):
         """
         Create mod_auth_pubtkt ticket.
 
@@ -500,8 +502,8 @@ class SignedTicket(object):
             ``validuntil`` (string):
                 timestamp of ticket expiration.
 
-            ``encoding`` :
-                encoding of the data into ticket
+            ``ENCODING`` :
+                ENCODING of the data into ticket
 
         Return:
 
@@ -535,19 +537,19 @@ class Ticket(object):
         self.secret=secret
 
     def __mod_auth_tkt_digest(self, data1, data2):
-        secret = self.secret.encode("utf-8")
-        digest0 = hashlib.md5(data1 + secret + data2).hexdigest().encode("utf-8")
+        secret = self.secret.encode(ENCODING)
+        digest0 = hashlib.md5(data1 + secret + data2).hexdigest().encode(ENCODING)
         digest = hashlib.md5(digest0 + secret).hexdigest()
         return digest
 
-    def __splitTicket(self,ticket, encoding='utf8'):
+    def __splitTicket(self, ticket):
         digest = ticket[:32]
         val = ticket[32:40]
         if not val:
             raise ValueError
         timestamp = int(val, 16) # convert from hexadecimal+
 
-        parts = ticket[40:].decode(encoding).split("!")
+        parts = ticket[40:].decode(ENCODING).split("!")
 
         if len(parts) == 2:
             userid, user_data = parts
@@ -589,8 +591,8 @@ class Ticket(object):
             ``validuntil`` (string):
                 timestamp of ticket expiration.
 
-            ``encoding`` :
-                encoding of the data into ticket
+            ``ENCODING`` :
+                ENCODING of the data into ticket
 
         Return:
 
@@ -611,7 +613,7 @@ class Ticket(object):
         # pack is used to convert timestamp from an unsigned integer to 4 bytes
         # in network byte order.
         data1 = inet_aton(cip) + pack("!I", validuntil)
-        data2 = '\0'.join((userid, token_list, user_list)).encode("utf-8")
+        data2 = '\0'.join((userid, token_list, user_list)).encode(ENCODING)
 
         digest = self.__mod_auth_tkt_digest(data1, data2)
 
@@ -623,12 +625,12 @@ class Ticket(object):
         if user_data:
             ticket += user_list
 
-        return ticket.encode("utf-8")
+        return ticket.encode(ENCODING)
 
 
 
 
-    def validateTkt(self, ticket, cip='0.0.0.0', now=None, encoding='utf8'):
+    def validateTkt(self, ticket, cip='0.0.0.0', now=None):
         """
         To validate, a new ticket is created from the data extracted from cookie
         and the shared secret. The two digests are compared and timestamp checked.
@@ -652,8 +654,8 @@ class Ticket(object):
             ``now`` (string):
                 Timestamp of client datetime, if not set , server timestamp is used.
 
-            ``encoding``:
-                encoding of the data into ticket
+            ``ENCODING``:
+                ENCODING of the data into ticket
 
         Return:
 
