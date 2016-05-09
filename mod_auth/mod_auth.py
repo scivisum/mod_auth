@@ -244,7 +244,7 @@ from struct import pack
 import hashlib
 import time
 import base64
-from .exception import *
+from mod_auth.exception import *
 
 ###IMPORT FOR MOD_AUTHPUBTKT###
 import Crypto.PublicKey.RSA as RSA
@@ -293,9 +293,10 @@ class SignedTicket(object):
 
         """
         sig = base64.b64decode(sig)
+        sig = int.from_bytes(sig, "big")
         dgst = hashlib.sha1(data).digest()
 
-        return self.pub_key.verify(dgst, sig)
+        return self.pub_key.verify(dgst, (sig, ))
 
 
     def __calculate_sig(self,data):
@@ -308,12 +309,13 @@ class SignedTicket(object):
 
         """
         dgst = hashlib.sha1(data).digest()
-        sig = self.priv_key.sign(dgst)
+        sig = self.priv_key.sign(dgst, "unused")
+        sig = sig[0].to_bytes(128, "big")
         sig = base64.b64encode(sig)
 
         return sig
 
-    def __create_ticket(self, uid, validuntil, ip=None, tokens=(),udata=(), graceperiod=None, extra_fields = () , encoding = "utf8"):
+    def __create_ticket(self, uid, validuntil, ip=None, tokens=(),udata=(), graceperiod=None, extra_fields = ()):
         """Returns signed mod_auth_pubtkt ticket.
 
         Mandatory arguments:
@@ -340,26 +342,23 @@ class SignedTicket(object):
 
         ``extra_fields``:
             List of (field_name, field_value) pairs which contains addtional, non-standard fields.
-
-        ``encoding``:
-            Encodign of the data.
         """
-
+        encoding = "utf-8"
         uid = uid.encode(encoding)
-        v = 'uid=%s;validuntil=%d' % (uid, validuntil)
+        v = b'uid=%s;validuntil=%d' % (uid, validuntil)
         if ip:
-            v += ';cip=%s' % ip
+            v += b';cip=%s' % ip.encode(encoding)
         if tokens:
-            v += ';tokens=%s' % ','.join(tokens).encode(encoding)
+            v += b';tokens=%s' % ','.join(tokens).encode(encoding)
         if graceperiod:
             ##TODO not used in 1.0 version
-            v += ';graceperiod=%d' % graceperiod
+            v += b';graceperiod=%d' % graceperiod
         if udata:
-            v += ';udata=%s' % ','.join(udata).encode(encoding)
+            v += b';udata=%s' % ','.join(udata).encode(encoding)
         for k,fv in extra_fields:
             ##TODO not userd in 1.0 version
-            v += ';%s=%s' % (k,fv)
-        v += ';sig=%s' % self.__calculate_sig(v)
+            v += b';%s=%s' % (k,fv)
+        v += b';sig=%s' % self.__calculate_sig(v)
         return v
 
     def __parse_ticket(self, ticket, encoding = 'utf8'):
@@ -379,9 +378,9 @@ class SignedTicket(object):
             encoding of the data into ticket
         """
 
-        i = ticket.rfind(';')
+        i = ticket.rfind(b';')
         sig = ticket[i+1:]
-        if sig[:4] != 'sig=':
+        if sig[:4] != b'sig=':
             raise BadTicket(ticket)
         sig = sig[4:]
         data = ticket[:i]
@@ -516,7 +515,7 @@ class SignedTicket(object):
             validuntil = int(time.time()) + DEFAULT_TIMEOUT
 
         #TODO graceperiod and extra_field is not used in 1.0 version
-        ticket=self.__create_ticket(userid,validuntil,cip,tokens,user_data,encoding=encoding)
+        ticket = self.__create_ticket(userid, validuntil,cip, tokens, user_data)
 
         return ticket
 
@@ -536,8 +535,9 @@ class Ticket(object):
         self.secret=secret
 
     def __mod_auth_tkt_digest(self, data1, data2):
-        digest0 = hashlib.md5(data1 + self.secret + data2).hexdigest()
-        digest = hashlib.md5(digest0 + self.secret).hexdigest()
+        secret = self.secret.encode("utf-8")
+        digest0 = hashlib.md5(data1 + secret + data2).hexdigest().encode("utf-8")
+        digest = hashlib.md5(digest0 + secret).hexdigest()
         return digest
 
     def __splitTicket(self,ticket, encoding='utf8'):
@@ -564,7 +564,7 @@ class Ticket(object):
 
         return digest, userid, tokens, user_data, timestamp
 
-    def createTkt( self, userid, tokens=(), user_data=(), cip='0.0.0.0', validuntil=None, encoding='utf8'):
+    def createTkt( self, userid, tokens=(), user_data=(), cip='0.0.0.0', validuntil=None):
         """
         Create mod_auth_pubtkt ticket.
 
@@ -601,8 +601,6 @@ class Ticket(object):
         if validuntil is None:
             validuntil = int(time.time()) + DEFAULT_TIMEOUT
 
-        userid = userid.encode(encoding)
-
         ##OLD VERSION WITHOUT DSA SIGN
         token_list = ','.join(tokens)
 
@@ -613,7 +611,7 @@ class Ticket(object):
         # pack is used to convert timestamp from an unsigned integer to 4 bytes
         # in network byte order.
         data1 = inet_aton(cip) + pack("!I", validuntil)
-        data2 = '\0'.join((userid, token_list, user_list)).encode(encoding)
+        data2 = '\0'.join((userid, token_list, user_list)).encode("utf-8")
 
         digest = self.__mod_auth_tkt_digest(data1, data2)
 
@@ -625,7 +623,7 @@ class Ticket(object):
         if user_data:
             ticket += user_list
 
-        return ticket
+        return ticket.encode("utf-8")
 
 
 
@@ -666,7 +664,7 @@ class Ticket(object):
 
 
             (digest, userid, tokens, user_data, validuntil) = data = self.__splitTicket(ticket)
-            new_ticket = self.createTkt(userid, tokens, user_data, cip, validuntil, encoding)
+            new_ticket = self.createTkt(userid, tokens, user_data, cip, validuntil)
             if new_ticket[:32] == digest:
 
                 if now is None:
@@ -745,6 +743,3 @@ def validateSimpleTicket(secret, ticket):
     simpleticket = Ticket(secret)
 
     return ticket.validateTkt(simpleticket)
-
-
-
