@@ -11,7 +11,7 @@ except ImportError:
 from setuptools import  find_packages
 
 METADATA = dict(
-    name='mod_auth_library',
+    name='mod_auth',
     version='1.0',
     author='Alfredo Saglimbeni',
     author_email='a.saglimbeni@scsitaly.com, repirro@gmail.com',
